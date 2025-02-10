@@ -44,8 +44,8 @@ Status available：:heavy_check_mark: (Completed) | :hourglass_flowing_sand: (Wo
 
 |          Status          | No.  |                    Chapter Title                     |
 | :----------------------: | :--: | :--------------------------------------------------: |
-| :hourglass_flowing_sand: | Ch01 |             [Getting Started](./Ch01.md)             |
-|        :no_entry:        | Ch02 |     [Advanced Editing and Navigation](./Ch02.md)     |
+|    :heavy_check_mark:    | Ch01 |             [Getting Started](./Ch01.md)             |
+| :hourglass_flowing_sand: | Ch02 |     [Advanced Editing and Navigation](./Ch02.md)     |
 |        :no_entry:        | Ch03 |   [Follow the Leader Plugin Management](./Ch03.md)   |
 |        :no_entry:        | Ch04 |      [Understanding Structured Text](./Ch04.md)      |
 |        :no_entry:        | Ch05 |        [Build, Test, and Execute](./Ch05.md)         |
