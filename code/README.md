@@ -1,6 +1,6 @@
 # Mastering Vim
 
-<a href="https://www.packtpub.com/en-us/product/mastering-vim-9781835081877"><img src="../assets/cover.jpg" alt="Mastering Vim" height="256px" align="right"></a>
+<a href="https://www.packtpub.com/en-us/product/mastering-vim-9781835081877"><img src="./assets/cover.png" alt="Mastering Vim" height="256px" align="right"></a>
 
 This is the code repository for [Mastering Vim](https://www.packtpub.com/en-us/product/mastering-vim-9781835081877?utm_source=github&utm_medium=repository&utm_campaign=), published by Packt.
 
@@ -23,7 +23,7 @@ If you feel this book is for you, get your [copy](https://www.amazon.com/dp/1835
 All of the code is organized into folders. 
 
 The code will look like the following:
-```
+```bash
 " Manage plugins with vim-plug.
 call plug#begin()
 call plug#end()
