@@ -42,17 +42,17 @@
 
 Status available：:heavy_check_mark: (Completed) | :hourglass_flowing_sand: (Working) | :no_entry: (Not Started) | :orange_book: (Finish reading)
 
-|          Status          | No.  |                    Chapter Title                     |
-| :----------------------: | :--: | :--------------------------------------------------: |
-|    :heavy_check_mark:    | Ch01 |             [Getting Started](./Ch01.md)             |
-| :hourglass_flowing_sand: | Ch02 |     [Advanced Editing and Navigation](./Ch02.md)     |
-|        :no_entry:        | Ch03 |   [Follow the Leader Plugin Management](./Ch03.md)   |
-|        :no_entry:        | Ch04 |      [Understanding Structured Text](./Ch04.md)      |
-|        :no_entry:        | Ch05 |        [Build, Test, and Execute](./Ch05.md)         |
-|        :no_entry:        | Ch06 | [Refactoring Code with Regex and Macros](./Ch06.md)  |
-|        :no_entry:        | Ch07 |           [Making Vim Your Own](./Ch07.md)           |
-|        :no_entry:        | Ch08 | [Transcending the Mundane with Vimscript](./Ch08.md) |
-|        :no_entry:        | Ch09 |          [Where to Go from Here](./Ch09.md)          |
+|          Status          | No.  |                        Chapter Title                         |
+| :----------------------: | :--: | :----------------------------------------------------------: |
+|    :heavy_check_mark:    | Ch01 |         [Getting Started](./Ch01-Getting-Started.md)         |
+| :hourglass_flowing_sand: | Ch02 | [Advanced Editing and Navigation](./Ch02-Advanced-Editing-and-Navigation.md) |
+|        :no_entry:        | Ch03 | [Follow the Leader Plugin Management](./Ch03-Follow-the-Leader-Plugin-Management.md) |
+|        :no_entry:        | Ch04 | [Understanding Structured Text](./Ch04-Understanding-Structured-Text.md) |
+|        :no_entry:        | Ch05 | [Build, Test, and Execute](./Ch05-Build-Test-and-Execute.md) |
+|        :no_entry:        | Ch06 | [Refactoring Code with Regex and Macros](./Ch06-Refactoring-Code-with-Regex-and-Macros.md) |
+|        :no_entry:        | Ch07 |     [Making Vim Your Own](./Ch07-Making-Vim-Your-Own.md)     |
+|        :no_entry:        | Ch08 | [Transcending the Mundane with Vimscript](./Ch08-Transcending-the-Mundane-with-Vimscript.md) |
+|        :no_entry:        | Ch09 |   [Where to Go from Here](./Ch09-Where-to-Go-from-Here.md)   |
 
 
 
