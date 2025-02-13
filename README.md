@@ -45,8 +45,8 @@ Status available：:heavy_check_mark: (Completed) | :hourglass_flowing_sand: (Wo
 |          Status          | No.  |                        Chapter Title                         |
 | :----------------------: | :--: | :----------------------------------------------------------: |
 |    :heavy_check_mark:    | Ch01 |         [Getting Started](./Ch01-Getting-Started.md)         |
-| :hourglass_flowing_sand: | Ch02 | [Advanced Editing and Navigation](./Ch02-Advanced-Editing-and-Navigation.md) |
-|        :no_entry:        | Ch03 | [Follow the Leader Plugin Management](./Ch03-Follow-the-Leader-Plugin-Management.md) |
+|    :heavy_check_mark:    | Ch02 | [Advanced Editing and Navigation](./Ch02-Advanced-Editing-and-Navigation.md) |
+| :hourglass_flowing_sand: | Ch03 | [Follow the Leader Plugin Management](./Ch03-Follow-the-Leader-Plugin-Management.md) |
 |        :no_entry:        | Ch04 | [Understanding Structured Text](./Ch04-Understanding-Structured-Text.md) |
 |        :no_entry:        | Ch05 | [Build, Test, and Execute](./Ch05-Build-Test-and-Execute.md) |
 |        :no_entry:        | Ch06 | [Refactoring Code with Regex and Macros](./Ch06-Refactoring-Code-with-Regex-and-Macros.md) |

@@ -14,8 +14,10 @@
 
 为方便查阅，以下是本章涉及的《**Vim Masterclass**》专栏对应的文章位置（强烈推荐从这里夯实基础）：
 
+- [【Vim Masterclass 笔记06】S05L18 寄存器的用法](https://blog.csdn.net/frgod/article/details/144911544)
 - [【Vim Masterclass 笔记09】S06L22：Vim 文本的搜索、查找与替换操作](https://blog.csdn.net/frgod/article/details/145066785)
 - [【Vim Masterclass 笔记10】S06L23：Vim 文本的搜索、查找与替换操作](https://blog.csdn.net/frgod/article/details/145095539)
+- [【Vim Masterclass 笔记13】S07L28：Vim 文本对象](https://blog.csdn.net/frgod/article/details/145136033)
 - [【Vim Masterclass 笔记23】第十章：Vim 缓冲区与多窗口的用法概述 + S10L42：Vim 缓冲区的用法详解与多文件编辑](https://blog.csdn.net/frgod/article/details/145271525)
 - [【Vim Masterclass 笔记25】S10L45：Vim 多窗口的常用操作方法及相关注意事项](https://blog.csdn.net/frgod/article/details/145291107)
 - [【Vim Masterclass 笔记26】S11L46：Vim 插件的安装、使用与日常管理](https://blog.csdn.net/frgod/article/details/145313538)
@@ -50,6 +52,8 @@ git clone https://github.com/your/plugin/url
 - `NERDTree`：[https://github.com/scrooloose/nerdtree](https://github.com/scrooloose/nerdtree)；
 - `Vinegar`：[https://github.com/tpope/vim-vinegar](https://github.com/tpope/vim-vinegar)；
 - `CtrlP`：[https://github.com/ctrlpvim/ctrlp.vim](https://github.com/ctrlpvim/ctrlp.vim)；
+- `ack.vim`：[https://github.com/mileszs/ack.vim](https://github.com/mileszs/ack.vim)；
+- `EasyMotion`：[https://github.com/easymotion/vim-easymotion](https://github.com/easymotion/vim-easymotion)。
 
 注意：这样安装的插件不会自动加载其文档到 `Vim` 帮助系统，必须手动执行 `:helptags /your/plugin/doc/path` 或者 `:helpt ALL`。为此，可以在 `vimrc` 文件添加如下命令，实现每次启动 `Vim` 强制加载插件文档 [^1]：
 
@@ -443,6 +447,136 @@ nnoremap <C-b> :CtrlPBuffer<cr> " Map CtrlP buffer mode to Ctrl + b.
 - `S` 或 `cc`：快速删除当前行内容并进入插入模式，且保留当前行缩进部分；
 
 
+
+## 5 跨文件搜索技巧
+
+### 5.1 系统工具 grep
+
+熟悉 `grep` 命令的可以直接用 `grep`。例如搜索当前路径下所有包含 `ingredient` 的 `Python` 源文件：
+
+```bash
+grep -r "ingredient" . --include="*.py"
+```
+
+![](assets/2.20.png)
+
+**图 2.15 使用系统内置 grep 命令进行文件内容检索**
+
+
+
+### 5.2 vimgrep 命令
+
+如果对 `grep` 不熟，也可换用 `:vimgrep`，语法格式为：
+
+```markdown
+:vimgrep <pattern> <path>
+```
+
+其中，`pattern` 既可以是一个字符串，也可以是一个基于 `Vim` 的正则表达式。路径 `path` 支持通配符检索，例如 `**` 表示递归检索，`**/*.py` 可限定文件类型等。
+
+在 `Vim` 中实现同等检索效果，需执行命令：`:vimgrep ingredient **/*.py` + <kbd>Enter</kbd>
+
+![](assets/2.21.png)
+
+![](assets/2.22.png)
+
+**图 2.16 在 Vim 中利用 vimgrep 实现跨文件检索实测效果图**
+
+关于 `vimgrep` 检索的常见操作：
+
+- `:cn`：定位到下一个匹配项，未在当前文件则自动加载对应的文件；
+- `:cp`：定位到上一个匹配项，未在当前文件则自动加载对应的文件；
+- `:copen`：以 `quickfix` 窗口形式显示所有匹配结果（如下图所示）；并可通过 <kbd>J</kbd> <kbd>K</kbd> 键完成上下浏览，<kbd>Enter</kbd> 键打开选中的匹配项；
+
+![](assets/2.23.png)
+
+**图 2.17 利用 :copen 命令查看所有匹配结果**
+
+
+
+### 5.3 系统工具 ack
+
+`ack` 工具针对代码库检索进行了专门优化，非常适合进行源代码检索。安装命令：
+
+```bash
+$ sudo apt install ack-grep
+```
+
+搜索当前路径下所有包含 `ingredient` 的 `Python` 源文件：
+
+```bash
+ack --python ingredient
+```
+
+实测结果：
+
+![](assets/2.24.png)
+
+**图 2.18 利用 ack 系统工具检索效果图**
+
+更多安装配置，详见官网：[https://beyondgrep.com/install](https://beyondgrep.com/install)。
+
+
+
+### 5.4 Vim 的 ack 插件
+
+`Vim` 的 `ack` 插件将系统 `ack` 的检索结果集成到了 `quickfix` 窗口中，使用体验更加流畅。
+
+安装地址：[https://github.com/mileszs/ack.vim](https://github.com/mileszs/ack.vim)
+
+使用方法也很简单，只需要将系统命令改为 `Vim` 版：
+
+```bash
+:Ack --python ingredient
+```
+
+实测结果如下：
+
+![](assets/2.25.png)
+
+**图 2.19 实测 Vim 的 ack 插件检索效果截图**
+
+有了该插件，无需运行 `:copen` 命令即可显示 `quickfix` 窗口。
+
+
+
+### 5.5 文本对象使用技巧
+
+`Vim` 中的文本对象即：单词（`w`）、句子（`s`）、段落（`p`）、标签（`t`）、各种引号与括号（<kbd>`</kbd>、<kbd>'</kbd>、<kbd>"</kbd>、<kbd>)</kbd>、<kbd>]</kbd>、<kbd>}</kbd>）。
+
+具体用法详见《**Vim Masterclass**》专栏 [第 13 篇笔记](https://blog.csdn.net/frgod/article/details/145136033)。
+
+
+
+### 5.6 EasyMotion 插件
+
+安装地址：[https://github.com/easymotion/vim-easymotion](https://github.com/easymotion/vim-easymotion)
+
+该插件极大地拓宽了原生 `Vim` 的光标定位操作，可以在极短时间内精确定位到页面上的指定位置。
+
+使用方法：`\\` + `{motion}`
+
+其中 `\\` 为两次重复的 `Leader` 键，默认为 <kbd>\\</kbd> 键，实测效果如下：
+
+![](assets/2.26.png)
+
+**图 2.20 实测 EasyMotion 插件的导航定位功能界面效果**
+
+具体用法详见《**Vim Masterclass**》[第 26 篇笔记](https://blog.csdn.net/frgod/article/details/145313538)。
+
+也可以直接参考 `EasyMotion` 插件文档：`:help easymotion` + <kbd>Enter</kbd>
+
+
+
+## 6 寄存器的用法
+
+书中所有知识点都可以参考《**Vim Masterclass**》专栏 [第 6 篇笔记](https://blog.csdn.net/frgod/article/details/144911544)。
+
+
+
+> **后记**
+>
+> 本章知识点十分庞杂，是后续进阶高级话题的必备基础。书中提到的每个第三方插件都值得认真深挖，配合官方提供的插件文档与 `DeepSeek` 智能助手，可实现快速突破。如果基础没有打牢，不建议继续往下学。
 
 ---
 
