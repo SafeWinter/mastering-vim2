@@ -295,3 +295,18 @@ noremap <leader>n :NERDTreeToggle<cr>
 ```
 
 这样，每次想要切换 `NERDTree` 的显示与隐藏，就不用在命令模式输入 `:NERDTreeToggle` + <kbd>Enter</kbd>，直接在正常模式下输入 <kbd>Space</kbd> + <kbd>N</kbd> 即可，非常方便（假设 `Leader` 已变更为空格键）。
+
+
+
+## 10 插件的配置
+
+`Vim` 中的全局变量通常以 `g:` 为前缀，多用于配置插件的默认设置。例如，`CtrlP` 插件的默认当前工作路径可以设为当前 `Git` 项目的根目录：
+
+```bash
+let g:ctrlp_working_path_mode = 'ra'
+```
+
+这里的 `g:ctrlp_working_path_mode` 就是一个全局变量，通过 `:h ctrlp` + <kbd>Enter</kbd> 进入插件文档，可以学习更多类似变量。
+
+
+
