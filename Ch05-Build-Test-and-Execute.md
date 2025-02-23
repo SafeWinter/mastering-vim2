@@ -443,3 +443,116 @@ bind-key -T copy-mode-vi C-l select-pane -R
 
 
 
+## 7 quickfix 列表
+
+`Vim` 提供了几个额外的模式来支持不同文件位置间的跳转。`quickfix` 快速修复列表就是其中之一，常用于展示运行 `:make` 命令产生的编译错误，或者 `:grep`、`:vimgrep` 命令产生的匹配项列表。一些语法检查插件也将检查结果或测试运行结果放到 `quickfix` 列表。
+
+例如，在当前文件夹下递归查找所有包含关键词 `ingredient` 的 `Python` 源码文件，可以在 `Vim` 中执行以下命令：
+
+```bash
+:grep -r --include="*.py" ingredient .
+```
+
+实测结果（当前路径：`~/vim2code/Chapter05/spam/`）：
+
+![](assets/5.16.png)
+
+**图 5.16 在 Vim 命令模式下用 grep 命令递归检索 ingredient 关键字的执行结果实测截图**
+
+按回车键后，`Vim` 将打开查询结果中的第一项（`./kitchen/bacon.py`）：
+
+![](assets/5.17.png)
+
+**图 5.17 按回车后 Vim 自动加载第一个匹配项**
+
+要查看完整匹配结果列表，需执行命令 `:copen [height]` + <kbd>Enter</kbd>。这里的 `c` 表示 `current`，意为当前的 `quickfix` 列表窗口：
+
+![](assets/5.18.png)
+
+**图 5.18 运行 copen 命令查看完整匹配列表**
+
+`quickfix` 列表的常见操作如下：
+
+- 光标上下移动：通过 `j`、`k` 实现；
+- 列表上下翻页：通过 `Ctrl-f` / `Ctrl-b` 实现；
+- 列表项检索：支持正反向关键字检索（`/<key_word>` 与 `?<key_word>`）；
+- 打开光标选中的列表项：按 <kbd>Enter</kbd> 即可；
+- 打开 `quickfix` 列表：`:copen`；
+- 关闭 `quickfix` 列表：`:cclose`、`:q`、`:bd`；
+
+此外，在不打开 `quickfix` 列表的情况下，也可能通过命令 `:cnext` / `:cn`、或者 `:cprevious` / `:cp` / `:cN` 实现上一个或下一个匹配项的快速切换。查看编译错误窗口，则可以使用 `:cwindow` / `:cw` 命令。
+
+
+
+## 8 location 列表
+
+与 `quickfix` 列表相似，但对于一个 `Vim` 会话而言，`quickfix` 列表仅有一个；而 `location` 列表可以有很多个，主要用于编译错误导航（结合 `:make` 命令）、语法校验工具集成（各类外部 `linter` 工具）、多文件检索、调试信息查看等。书中并未展开介绍，仅供了解。
+
+`location` 列表常见操作指令有——
+
+- `:lopen`：打开 `location` 列表窗口。
+- `:lclose`：关闭 `location` 列表窗口。
+- `:lnext`：跳转到下一个条目。
+- `:lprevious`：跳转到上一个条目。
+- `:lfirst`：跳转到第一个条目。
+- `:llast`：跳转到最后一个条目。
+
+
+
+## 9 pylint3 的用法
+
+外部工具 `pylint3` 适用于 `Python3` 环境下的语法校验。
+
+安装命令：`sudo apt install pylint3`
+
+通过下列 `vimrc` 配置，可将其集成到 `Vim` 的 `:make` 命令中：
+
+```bash
+autocmd filetype python setlocal makeprg=python3\ -m\ pylint\ --reports=n\ --msg-template=\"{path}:{line}:\ {msg_id}\ {symbol},\{obj}\ {msg}\"\ %:p
+autocmd filetype python setlocal errorformat=%f:%l:\ %m
+```
+
+完成配置后，打开 `welcome.py` 文件，运行编译命令 `:make` + <kbd>Enter</kbd> 将看到和之前 `:grep` 命令类似的界面：
+
+![](assets/5.19.png)
+
+**图 5.19 将 pylint3 集成到 make 编译命令后，执行 make 命令看到的语法检查结果视图**
+
+![](assets/5.22.png)
+
+**图 5.20 执行 copen 命令看到的语法检查问题列表**
+
+可以看到，`make` 命令以及按指定的语法校验工具和输出格式显示了编译结果。
+
+基于上述操作模式，还可以让 `make` 命令与其他语言的校验工具相集成，实现更加个性化的编译方案。
+
+
+
+## 10 ALE 插件的用法
+
+`ALE` 即 `Asynchronous Lint Engine` 的缩写，即异步语法校验引擎，功能与 `pylint3` 类似，最大的特点在于实时校验语法规则并提醒用户更正。
+
+`ALE` 可通过 `vim-plug` 工具快速安装：
+
+1. 添加配置行：`Plug 'dense-analysis/ale'`
+2. 保存 `vimrc` 并安装插件：`:w | so ~/.vimrc | PlugInstall` + <kbd>Enter</kbd>
+
+安装完毕后，打开一个示例文件 `welcome.py`，`ALE` 将自动标出存在语法校验问题的行：
+
+![](assets/5.20.png)
+
+**图 5.21 实测 ALE 插件的自动提示效果**
+
+此时也可以用 `:lopen` 打开 `location` 列表查看完整语法检查结果：
+
+![](assets/5.21.png)
+
+**图 5.22 运行 lopen 命令看到的 ALE 插件校验结果列表实测截图**
+
+
+
+## 11 本章小结
+
+本章花了很多篇幅去介绍一些过于基础的知识点（Git 基础操作），使得后续重点内容的介绍有些仓促，学习时一定要结合自身情况查漏补缺，控制好这个 “精通” 的程度。对我本人而言，`Git` 的基础命令就不是重点，而 `tmux` 的相关操作则可以多多尝试。
+
+另外，后续关于代码编译测试的内容让人感觉也比较原始，和现行主流 `IDE` 的同类功能相比略显粗糙，还不具备直接平替的应用条件（也可能是我孤陋寡闻，没有举一反三）。
