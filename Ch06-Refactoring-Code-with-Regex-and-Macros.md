@@ -419,7 +419,7 @@ if __name__ == '__main__':
 
 ```
 
-书中演示的 `Vim` 宏重构操作，其实是通过录制宏 `"a`，将原来的（光标初始定位到第一个 `if` 处）：
+书中演示的 `Vim` 宏重构操作，其实是通过录制宏 `"a`，将原来的多重 `if` 判定逻辑（光标初始定位到第一个 `if` 处）：
 
 ```python
 def prepare_ingredient(ingredient):
@@ -443,11 +443,11 @@ def prepare_ingredient(ingredient):
 
 的过程；并且在逐一删除 `if` 逻辑的过程中，需要同步修改各子类的 `custom_spam_name` 的取值；另外，由于整个过程需要借助 `Ctrl-]` 跳转到各子类的定义文件，因此还需要提前装好 `ctags` 工具（`sudo apt install universal-ctags`），并在项目根路径下提前生成 `tags` 文件（`ctags -R .`）。
 
-一切就绪后，就可以将光标定位到第一个 `if` 处，并录制 `Vim` 宏到寄存器 `"a` 中。最终实测结果如下（书中最后还漏掉了保存 `welcome.py` 的关键步骤，这里一并更正）：
+一切就绪后，就可以将光标定位到第一个 `if` 处，并录制 `Vim` 宏到寄存器 `"a` 中。最终实测结果如下：
 
 ![](assets/6.9.png)
 
-完整的宏代码摘录如下：
+完整的宏代码摘录如下（书中最后还漏掉了保存 `welcome.py` 的关键步骤，这里一并更正）：
 
 ```markdown
 j_w"by$kf)b^]/self.name^Moself.custom_spam_name = ^["bp:w^M^^2dd:w^M
