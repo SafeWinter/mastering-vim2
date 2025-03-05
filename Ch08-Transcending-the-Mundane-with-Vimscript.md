@@ -24,9 +24,9 @@
 
 
 
-## 2 Vimscript 的执行方法
+## 2 Vimscript 的运行方式
 
-`Vimscript` 由一系列 `Vim` 命令构成，既可以在命令模式下执行每条 `Vim` 命令（以 `:` 开头），也可以用 `:source` 来运行包含 `Vim` 命令的某个脚本文件（通常以 `.vim` 作为扩展名）：
+`Vimscript` 由一系列 `Vim` 命令构成，既可以在命令模式下执行每条 `Vim` 命令，也可以用 `:source` 命令来运行包含 `Vimscript` 的某个文件（通常以 `.vim` 作扩展名）：
 
 ```bash
 :source <vimscript_filename>
@@ -34,19 +34,19 @@
 :so %
 ```
 
-这里的 `%` 表示当前打开的文件。实战过程中，如果要立即生效当前 `.vimrc` 文件的配置内容，还可以写作：
+这里的 `%` 表示 **当前打开的文件**。实战过程中，如果要立即生效当前 `.vimrc` 文件的配置内容，还可以写作：
 
 ```bash
 :w | so %
 ```
 
-注意：务必先保存再运行 `:so` 命令，否则新修改内容无法生效。
+注意：务必先保存再运行，否则新内容无法生效。
 
 > [!tip]
 >
 > **最佳实践**
 >
-> `:so %` 常用于较长 `Vim` 脚本的运行；`Vim` 命令行模式通常适用于命令的调试操作。
+> 用 `:so %` 运行较长的 `Vim` 脚本；用 `Vim` 命令模式来调试脚本。
 
 
 
@@ -101,7 +101,133 @@ echo '- said the waitress'
 
 ## 5 语法速览
 
-经典教材推荐：[《Learn Vimscript the Hard Way》](https://learnvimscriptthehardway.stevelosh.com/)（作者：Steve Losh）。
+经典教材推荐：[《Learn Vimscript the Hard Way》](https://learnvimscriptthehardway.stevelosh.com/)（作者：Steve Losh）[^3]。
+
+### 5.1 变量赋值
+
+```bash
+# 旧版
+let dish = 'spam omelet'
+# 新版（还可以用 const、final）
+var dish = 'spam omelet'
+```
+
+声明布尔型变量：
+
+```bash
+# 旧版（用 1 或 0 表示布尔值）
+let has_spam = 1
+has_spam = 0
+# 新版（支持显式声明）
+var has_spam = true
+has_spam = false
+```
+
+
+
+### 5.2 关于变量作用域
+
+通过添加前缀来设置变量的作用域，例如：
+
+```bash
+let g:dish = 'spam omelet'
+let w:has_spam = 1
+```
+
+常见的变量作用域如下（旧版）：
+
+- `g`：表示 `global`，即全局作用域（默认作用域，但函数内声明除外）；
+- `v`：表示 `vim-variables`，由 `Vim` 定义的全局作用域；
+- `l`：表示 `local scope`，局部作用域（也是函数内声明的默认作用域）；
+- `b`：表示 `buffer`，即当前缓冲区；
+- `w`：`current window`，即当前窗口作用域；
+- `t`：`current tab`，即当前标签作用域；
+- `s`：表示 `script`，即脚本级作用域，其变量只在被 `:source` 命令调用的脚本文件内可见；
+- `a`：表示 `function argument`，即函数参数作用域。
+
+新版调整：
+
+- 默认作用域改为 `s` 级作用域；
+- 不再使用 `a:` 前缀来声明函数参数作用域变量；函数参数作用域改为局部作用域（`l:`）的一部分。
+
+
+
+### 5.3 Vim 配置项的赋值
+
+例如声明 `ignorecase` 选项的值：
+
+```bash
+# 旧版
+let &ignorecase = 0
+# 新版
+&ignorecase = 0
+```
+
+
+
+### 5.4 Vim 寄存器的赋值
+
+例如修改寄存器 `a"` 的值：
+
+```bash
+# 旧版
+let @a = 'spam spam spam'
+# 新版
+@a = 'spam spam spam'
+```
+
+
+
+### 5.5 字符串的连接
+
+旧版使用 `.` 操作符，新版改为 `..`：
+
+```bash
+# 旧版
+let g:dish = 'spam omelet'
+let g:statement = 'Well, we''ve got ' . g:dish
+
+# 新版
+g:dish = 'spam omelet'
+var statement = 'Well, we''ve got ' .. g:dish
+```
+
+
+
+> [!tip]
+>
+> **DIY 实战：关于 Vim 脚本中的引号和注释**
+>
+> 注意：示例中的单引号是通过重复录入单引号 `'` 实现的。虽然外围也可以改用双引号，写作 `"Well, we've got "`，但由于旧版 `Vimscript` 的注释也是用双引号 `"` 标识的，因此容易产生混淆，不建议这样更改；正因如此，某些 `Vim` 命令的同一行后不能跟一个注释语句，因为会被误判为没写完的字符串（例如 `echo` 命令）：
+>
+> ```bash
+> # 旧版
+> let g:dish = 123
+> echo g:dish "comment content
+> ```
+>
+> 运行结果：
+>
+> ![](assets/8.3.png)
+>
+> **图 8.3 实测旧版 Vimscript 中的 echo 命令与注释语句在同一行时报错**
+>
+> 而在新版 `Vim9script` 中，注释语句改用 `#` 标识，上述测试脚本可以写为：
+>
+> ```bash
+> # 新版
+> vim9script
+> g:dish = 123
+> echo g:dish #comment content
+> ```
+>
+> 运行结果：
+>
+> ![](assets/8.4.png)
+>
+> **图 8.4 实测新版 Vim9script 中的 echo 命令与新版注释语句在同一行时运行不报错**
+>
+> 显然我本地的 `PaperColor` 主题还不能正确解析这种情况，因此还是尽量不要这样写。
 
 
 
@@ -113,6 +239,9 @@ echo '- said the waitress'
 
 [^1]: `Vimscript` 是 `Vim8.x` 及以前版本的专属 `Vim` 脚本语言；`Vim9script` 由 `Vim` 之父 **Bram Moolenaar** 于 2022 年 6 月正式发布。自 2023 年 8 月 **Bram Moolenaar** 猝然离世（享年 62 岁）后，开源社区的 `Vim` 核心成员与爱好者们又纷纷组织起来，于 2024 年 1 月推出了改良版的 `Vim 9.1` 版，并对此前的 `Vim9script` 存在的诸多问题进行了全面修复，以此纪念这位 `Vim` 编辑器的缔造者、维护者以及终身领导者。
 [^2]: 先别管 `has('win32')` 以及上面的 `var`、`let` 的含义，因为后面会具体介绍；这里先建立执行 `Vim` 脚本的直观感受
+
+[^3]: 完整 PDF 版本我已免费上传到网盘：`https://pan.baidu.com/s/1kUzFlLSBBLx5rZVO_TFTZw?pwd=7dnv`，提取码：`7dnv`
+
 
 
 
