@@ -194,40 +194,118 @@ var statement = 'Well, we''ve got ' .. g:dish
 
 
 
-> [!tip]
->
-> **DIY 实战：关于 Vim 脚本中的引号和注释**
->
-> 注意：示例中的单引号是通过重复录入单引号 `'` 实现的。虽然外围也可以改用双引号，写作 `"Well, we've got "`，但由于旧版 `Vimscript` 的注释也是用双引号 `"` 标识的，因此容易产生混淆，不建议这样更改；正因如此，某些 `Vim` 命令的同一行后不能跟一个注释语句，因为会被误判为没写完的字符串（例如 `echo` 命令）：
->
-> ```bash
-> # 旧版
-> let g:dish = 123
-> echo g:dish "comment content
-> ```
->
-> 运行结果：
->
-> ![](assets/8.3.png)
->
-> **图 8.3 实测旧版 Vimscript 中的 echo 命令与注释语句在同一行时报错**
->
-> 而在新版 `Vim9script` 中，注释语句改用 `#` 标识，上述测试脚本可以写为：
->
-> ```bash
-> # 新版
-> vim9script
-> g:dish = 123
-> echo g:dish #comment content
-> ```
->
-> 运行结果：
->
-> ![](assets/8.4.png)
->
-> **图 8.4 实测新版 Vim9script 中的 echo 命令与新版注释语句在同一行时运行不报错**
->
-> 显然我本地的 `PaperColor` 主题还不能正确解析这种情况，因此还是尽量不要这样写。
+### 5.6 关于 Vim 脚本中的引号和注释
+
+注意：示例中的单引号是通过重复录入单引号 `'` 实现的。虽然外围也可以改用双引号，写作 `"Well, we've got "`，但由于旧版 `Vimscript` 的注释也是用双引号 `"` 标识的，因此容易产生混淆，不建议这样更改；正因如此，某些 `Vim` 命令的同一行后不能跟一个注释语句，因为会被误判为没写完的字符串（例如 `echo` 命令）：
+
+```bash
+# 旧版
+let g:dish = 123
+echo g:dish "comment content
+```
+
+运行结果：
+
+![](assets/8.3.png)
+
+**图 8.3 实测旧版 Vimscript 中的 echo 命令与注释语句在同一行时报错**
+
+而在新版 `Vim9script` 中，注释语句改用 `#` 标识，上述测试脚本可以写为：
+
+```bash
+# 新版
+vim9script
+g:dish = 123
+echo g:dish #comment content
+```
+
+运行结果：
+
+![](assets/8.4.png)
+
+**图 8.4 实测新版 Vim9script 中的 echo 命令与新版注释语句在同一行时运行不报错**
+
+显然我本地的 `PaperColor` 主题还不能正确解析这种情况，因此还是尽量不要这样写。
+
+
+
+### 5.7 echo、echom 与 messages
+
+`echo` 命令会将内容显示到状态栏，但该结果不会被记录，一旦删除将无法查看。
+
+`echom` 或 `echomsg` 命令会将输出内容同步记录到当前会话的信息日志，并可通过 `:messages` + <kbd>Enter</kbd> 查看：
+
+![](assets/8.5.png)
+
+**图 8.5 实测 echo、echom 与 messages 命令的执行结果**
+
+更多用法，详见 `:h message-history`。
+
+
+
+### 5.8 条件语句
+
+```bash
+# 旧版
+# if 的写法
+let ingredient = 'egg'
+
+if ingredient == 'egg' 
+  echo 'spam omelet' 
+elseif ingredient == 'lobster' 
+  echo 'spam lobster thermidor' 
+else 
+  echo dish . ' and spam' 
+endif 
+
+# 三目运算符
+echo 'spam ' . (ingredient == 'egg' ? 'omelet' : dish)
+
+# 逻辑运算符 &&、||、!
+let is_egg = 0
+let is_lobster = 0
+if (!is_egg && !is_lobster)
+  echo ingredient . ' and spam'
+endif
+```
+
+上述示例脚本对应的 `vim9script` 新版等效写法如下：
+
+```bash
+vim9script
+
+const ingredient = 'egg'
+
+if ingredient == 'egg' 
+  echo 'spam omelet' 
+elseif ingredient == 'lobster' 
+  echo 'spam lobster thermidor' 
+else 
+  echo dish .. ' and spam' 
+endif 
+
+echo 'spam ' .. (ingredient == 'egg' ? 'omelet' : dish)
+
+const is_egg = 0
+const is_lobster = 0
+if (!is_egg && !is_lobster)
+  echo ingredient .. ' and spam'
+endif
+```
+
+另外，专用于文本内容比较还有几个具体的写法（也是 `Vim` 脚本的推荐写法）：
+
+|                     比较类型                      | 写法  |           示例           |
+| :-----------------------------------------------: | :---: | :----------------------: |
+|         **相等匹配**（大小写随系统设置）          | `==`  |  `'egg' == 'EGG'`（假）  |
+|           明确忽略大小写的 **相等匹配**           | `==?` | `'egg' ==? 'EGG'`（真）  |
+|           明确考虑大小写的 **相等匹配**           | `==#` | `'egg' ==# 'EGG'`（假）  |
+|  检查与右侧模式是否 **匹配**（大小写随系统设置）  | `=~`  | `'egg' =~ 'e.\+'`（真）  |
+|     检查与右侧模式是否 **匹配**（忽略大小写）     | `=~?` | `'egg' =~? 'E.\+'`（真） |
+|     检查与右侧模式是否 **匹配**（考虑大小写）     | `=~#` | `'egg' =~# 'E.\+'`（假） |
+| 检查与右侧模式是否 **不匹配**（大小写随系统设置） | `!~`  |  `'egg' !~ '.gg'`（假）  |
+|    检查与右侧模式是否 **不匹配**（忽略大小写）    | `!~?` | `'egg' !~? 'E.\+'`（假） |
+|    检查与右侧模式是否 **不匹配**（考虑大小写）    | `!~#` | `'egg' !~# 'E.\+'`（真） |
 
 
 
@@ -241,7 +319,6 @@ var statement = 'Well, we''ve got ' .. g:dish
 [^2]: 先别管 `has('win32')` 以及上面的 `var`、`let` 的含义，因为后面会具体介绍；这里先建立执行 `Vim` 脚本的直观感受
 
 [^3]: 完整 PDF 版本我已免费上传到网盘：`https://pan.baidu.com/s/1kUzFlLSBBLx5rZVO_TFTZw?pwd=7dnv`，提取码：`7dnv`
-
 
 
 
