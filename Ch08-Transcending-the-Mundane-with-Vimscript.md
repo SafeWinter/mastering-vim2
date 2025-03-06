@@ -309,6 +309,186 @@ endif
 
 
 
+### 5.9 List 列表
+
+`Vimscript` 中的列表概念与 `Python` 非常相似：
+
+```bash
+# 旧版
+let ingredients = ['egg', 'bacon', 'sausage']
+# 新版
+var ingredients = ['egg', 'bacon', 'sausage']
+```
+
+列表的基本操作（增删查改）如下——
+
+
+
+#### 5.9.1 查
+
+列表元素则通过索引获取：
+
+```bash
+# 旧版
+let egg = ingredients[0]      " get 1st element
+let bacon = ingredients[1]    " get 2nd element
+let sausage = ingredients[-1] " get last element
+
+# 新版
+const egg = ingredients[0]      # get 1st element
+const bacon = ingredients[1]    # get 2nd element
+const sausage = ingredients[-1] # get last element
+```
+
+获取子列表：
+
+```bash
+# 旧版
+let slice = ingredients[1:]   " ['bacon', 'sausage']
+let slice = ingredients[0:1]  " ['egg', 'bacon']
+# 新版
+var slice = ingredients[1 : ]
+slice = ingredients[0 : 1]
+```
+
+除了查列表项的 **值**，还可以查列表项的 **索引**：
+
+```bash
+# 旧版
+let i = index(ingredients, 'sausage') " 2
+# 新版
+var i = index(ingredients, 'sausage') # 2
+```
+
+以及查元素个数（`len()` 函数）：
+
+```bash
+# 旧版
+echo 'There are ' . len(ingredients) . ' ingredients.'
+# 新版
+echo 'There are ' .. len(ingredients) .. ' ingredients.'
+```
+
+查某元素的重复次数（`count()` 函数）：
+
+```bash
+# 旧版
+echo 'There are ' . count(ingredients, 'egg') . ' eggs.'
+# 新版
+echo 'There are ' .. count(ingredients, 'egg') .. ' eggs.'
+```
+
+查某列表是否为空（`empty()` 函数）：
+
+```bash
+# 旧版新版皆可
+if empty(ingredients)
+  echo 'There are no ingredients!'
+endif
+```
+
+
+
+#### 5.9.2 增
+
+在列表末尾新增一个元素：
+
+```bash
+# 旧版
+call add(ingredients, 'lobster')
+# 新版
+add(ingredients, 'lobster')
+```
+
+在列表开头新增一个元素：
+
+```bash
+# 旧版
+call insert(ingredients, 'tomato')
+# 新版
+insert(ingredients, 'tomato')
+```
+
+在指定位置插入一个元素：
+
+```bash
+# 旧版
+call insert(ingredients, 'ham', 2)
+# 新版
+insert(ingredients, 'ham', 2)
+```
+
+若 `ingredients` 最初为 `['tomato', 'egg', 'bacon', 'sausage', 'lobster']`，插入 `'ham'` 后则变为 `['tomato', 'egg', 'ham', 'bacon', 'sausage', 'lobster']`。
+
+
+> [!note]
+>
+> **注意**
+>
+> `add` 函数和 `insert` 函数都是直接在列表上进行修改，因此不是纯函数，且返回值均为更新后的列表。
+
+
+
+#### 5.9.3 删
+
+两种方式：`unlet` 语句和 `remove` 内置函数：
+
+```bash
+# 旧版
+unlet ingredients[2]          " 删除第三个列表项
+call remove(ingredients, -1)  " 删除最后一个列表项
+unlet ingredients[:1]         " 删除多个元素，相当于 call remove(ingredients, 0, 1)
+
+# 新版
+unlet ingredients[2]
+remove(ingredients, -1)  # 删除最后一个列表项，并返回被删元素
+unlet ingredients[:1]    # 删除多个元素，相当于 remove(ingredients, 0, 1)
+```
+
+
+
+#### 5.9.4 改
+
+常见的两种方式：`+` 运算符和 `extend()` 内置函数：
+
+```bash
+# 旧版
+let fresh = ['egg', 'lobster']
+let preserved = ['bacon', 'sausage']
+let ingredients = fresh + preserved  " ['egg', 'lobster', 'bacon', 'sausage']
+call extend(fresh, preserved)
+
+# 新版
+var fresh = ['egg', 'lobster']
+var preserved = ['bacon', 'sausage']
+ingredients = fresh + preserved
+extend(fresh, preserved)
+```
+
+上述代码中，`extend` 函数文如其名，会扩展 `fresh` 的列表项，而 `preserved` 不变。
+
+此外，`extend` 还可以接收第三个参数：`extend({expr1}, {expr2} [, {expr3}])`。它是一个索引值，用于指定 `{expr2}` 加到 `{expr1}` 中的具体位置。
+
+除了改变列表项的个数，还可以改变列表项的顺序—— `sort()` 排序函数：
+
+```bash
+# 旧版
+call sort(ingredients)
+
+# 新版
+sort(ingredients)
+```
+
+这是最简单的排序方式——按字母表升序排序。此外还支持不同区域文化排序和自定义排序，格式为 `sort({list} [, {how} [, {dict}]])`，详见 `:h sort()`。
+
+更多关于 `list` 列表的用法，详见 `:h list`。
+
+
+
+### 5.10 字典
+
+
+
 
 
 
