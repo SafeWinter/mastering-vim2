@@ -487,6 +487,265 @@ sort(ingredients)
 
 ### 5.10 字典
 
+新版 `Vim9script` 在字典的定义上省去了多余的反斜杠符：
+
+```bash
+# 旧版
+let menu = { 
+  \ 'egg': 'spam omelet', 
+  \ 'bacon': 'bacon and spam', 
+  \ 'sausage': 'spam with sausage' 
+  \ }
+
+# 新版
+var menu = { 
+  'egg': 'spam omelet', 
+  'bacon': 'bacon and spam', 
+  'sausage': 'spam with sausage' 
+}
+```
+
+字典的基本操作（增删改查）也和列表有很多相似之处——
+
+字典中某 `key` 键对应的 `value` 值通过方括号和 `.` 操作符访问：
+
+```bash
+# 旧版
+let egg_dish = menu['egg']  " get an element
+let egg_dish = menu.egg     " another way to access an element
+
+# 新版
+var egg_dish = menu['egg']  # get an element
+egg_dish = menu.egg         # another way to access an element
+```
+
+值的修改或者键值对的新增都可以通过直接赋值实现：
+
+```bash
+# 旧版
+let menu['lobster'] = 'lobster thermidor'
+let menu.lobster = 'lobster thermidor'
+
+# 新版
+menu['lobster'] = 'lobster thermidor'
+menu.lobster = 'lobster thermidor'
+```
+
+最终得到的 `menu` 如下：
+
+```bash
+{
+  'bacon': 'bacon and spam', 
+  'egg': 'spam omelet', 
+  'sausage': 'spam with sausage', 
+  'lobster': 'lobster thermidor'
+}
+```
+
+键值对的删除也和列表类似，分为 `unlet` 语句删除和 `remove()` 函数删除；后者返回被删的字典 **值**：
+
+```bash
+# 旧版
+unlet menu['lobster']
+let lobster = remove(menu, 'lobster')
+echo lobster  " lobster thermidor
+
+# 新版
+unlet menu['lobster']
+const lobster = remove(menu, 'lobster')
+echo lobster  # lobster thermidor
+```
+
+同理，字典也支持 `extend()` 函数进行扩展：
+
+```bash
+# 旧版
+call extend(menu, {'lobster': 'lobster thermidor'})
+# 新版
+extend(menu, {'lobster': 'lobster thermidor'})
+```
+
+如果 `menu` 已存在 `lobster` 的键，则扩展的最终结果可以用第三个参数 `{expr3}` 来手动控制，其取值有三个：
+
+- `"keep"`：保留 `menu` 原来的值；
+- `"force"`：（默认情况）使用新的键值对替换原来的值；
+- `"error"`：不允许出现重复的键，并给出报错信息。
+
+此外，字典也支持 `len()` 函数和 `empty()` 函数，分别用于查看键值对的个数和非空判定：
+
+```bash
+# 新旧两版写法相同
+if !empty(menu)
+  echo 'There are ' . len(menu) . ' dishes in the menu.'
+endif
+```
+
+此外 `len(menu)` 还可以写为方法形式：
+
+```bash
+# 旧版（不能有空格）
+echo menu->len()
+
+# 新版（可以有空格）
+echo menu -> len()
+```
+
+字典还有个特有的函数 `has_key`，用于判定某个 `key` 键是否存在：
+
+```bash
+# 新旧两版写法相同
+if has_key(menu, 'egg')
+  echo 'An egg dish is called ' . menu['egg']
+endif
+```
+
+
+
+### 5.11 循环
+
+#### 5.11.1 for 循环
+
+首先是 `for` 循环。可以作用于列表：
+
+```bash
+# 新旧两版写法一致（以新版为例）
+for ingredient in ['egg', 'bacon', 'sausage']
+  echo ingredient
+endfor
+```
+
+作用于字典时分两种情况：
+
+```bash
+# 新旧两版写法一致（以新版为例）
+const menu = {
+  'egg': 'spam omelet',
+  'bacon': 'bacon and spam',
+  'sausage': 'spam with sausage'
+}
+
+# 遍历 key 键
+for ingredient in keys(menu) 
+  echo 'A dish with ' .. ingredient .. ' is called ' .. menu[ingredient] 
+endfor 
+
+# 遍历键值对
+for [ingredient, dish] in items(menu) 
+  echo 'A dish with ' .. ingredient .. ' is called ' .. dish 
+endfor 
+```
+
+`for` 循环中可以使用 `break` 退出整个循环，也可以用 `continue` 中断当次循环、并继续下一次循环：
+
+```bash
+# break 示例
+var ingredients = ['egg', 'bacon', 'sausage'] 
+
+for ingredient in ingredients 
+  if ingredient ==# 'bacon' 
+    echo 'Found bacon! Breaking!' 
+    break 
+  endif 
+  echo 'Looking at an ingredient ' .. ingredient .. ', no bacon yet.' 
+endfor 
+# 结果：
+#  Looking at an ingredient egg, no bacon yet.
+#  Found bacon! Breaking!
+
+# continue 示例
+ingredients = ['egg', 'bacon', 'sausage'] 
+
+for ingredient in ingredients
+  if ingredient ==# 'egg'
+    echo 'Ignoring the egg...'
+    continue
+  endif
+  echo 'Looking at an ingredient ' .. ingredient
+endfor
+# 结果：
+#  Ignoring the egg...
+#  Looking at an ingredient bacon
+#  Looking at an ingredient sausage
+```
+
+
+
+#### 5.11.2 while 循环
+
+新旧两版的 `while` 循环写法一样：
+
+```bash
+# 以新版为例
+ingredients = ['egg', 'bacon', 'sausage']
+
+while !empty(ingredients)
+  echo remove(ingredients, 0)
+endwhile
+# 结果：
+#  egg
+#  bacon
+#  sausage
+```
+
+`while` 循环也支持 `continue` 和 `break` 关键字，以 `break` 为例：
+
+```bash
+# break 示例
+ingredients = ['egg', 'bacon', 'sausage']
+
+while len(ingredients) > 0
+  var ingredient = remove(ingredients, 0)
+  if ingredient ==# 'bacon'
+    echo 'Found the bacon, breaking!'
+    break
+  endif
+  echo 'Looking at an ingredient ' .. ingredient
+endwhile
+# 结果：
+#  Looking at an ingredient egg
+#  Found the bacon, breaking!
+```
+
+
+
+### 5.12 函数
+
+旧版使用 `function` 关键字，新版使用 `def`（类似 `Python`）：
+
+```bash
+# 旧版
+function PrepareIngredient(ingredient) 
+  echo a:ingredient . ' and spam' 
+endfunction 
+
+function PrepareIngredient2(ingredient)
+  return a:ingredient . ' and spam'
+endfunction
+
+# 新版
+def PrepareIngredient(ingredient: string) 
+  echo ingredient .. ' and spam' 
+enddef 
+
+def PrepareIngredient2(ingredient: string): string
+  return ingredient .. ' and spam'
+enddef
+```
+
+函数的调用如下：
+
+```bash
+# 旧版
+call PrepareIngredient('aaa')
+echo PrepareIngredient2('bbb')
+
+# 新版
+PrepareIngredient('aaa')
+echo PrepareIngredient2('bbb')
+```
+
+注意，`Vim` 要求用户定义的函数名必须以大写字母开头。
+
 
 
 
