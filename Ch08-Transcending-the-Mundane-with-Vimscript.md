@@ -744,9 +744,50 @@ PrepareIngredient('aaa')
 echo PrepareIngredient2('bbb')
 ```
 
-注意，`Vim` 要求用户定义的函数名必须以大写字母开头。
+注意：
+
+- `Vim` 要求用户定义的函数名 **必须以大写字母开头**；
+- 新版函数的声明需要指定参数的数据类型；若有返回值还需声明返回值的类型，否则无法正常运行；
+- 新版函数的参数作用域，已从之前的 `:a` 前缀改为 `:l`，即局部作用域（`local`）。
 
 
+
+#### 5.12.1 Lambda 表达式
+
+`Vim` 还支持 `Lambda` 表达式，只是新旧两个版本差异比较大：
+
+```bash
+# 旧版：{args -> expr1}
+let PrepareIngredient = {ingredient -> ingredient . ' and spam1'}
+# 新版：var lambda = (arg): type => expression
+var PrepareIngredient = (ingredient): string => ingredient .. ' and spam'
+```
+
+`Lambda` 表达式的调用与普通函数相同。更多用法，详见 `:h lambda`。
+
+
+
+### 5.13 Class 类
+
+`Class` 类在旧版的 `Vimscript` 中存在很多欠优雅的古怪语法。如果希望在脚本中应用面向对象编程，应该首选新版写法：
+
+```bash
+vim9script
+
+class Dish
+  var ingredient: string
+  var dish_name: string
+
+  def PrepareIngredient(has_spam: bool)
+    this.dish_name = has_spam ? this.ingredient ..
+        \ ' and spam' : this.ingredient
+  enddef
+endclass
+
+var bacon = Dish.new('bacon')
+bacon.PrepareIngredient(true)
+echo bacon.dish_name # bacon and spam
+```
 
 
 
