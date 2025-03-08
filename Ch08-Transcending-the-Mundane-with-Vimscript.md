@@ -789,7 +789,319 @@ bacon.PrepareIngredient(true)
 echo bacon.dish_name # bacon and spam
 ```
 
+对应的旧版写法：
 
+```bash
+function PrepareIngredient(has_spam) dict
+  let self.dish_name = a:has_spam == 1 ? self.ingredient . ' and spam'
+      \ : self.ingredient
+endfunction 
+
+let dish = { 
+  \ 'ingredient': 'sausage', 
+  \ 'dish_name': '', 
+  \ 'PrepareIngredient': function('PrepareIngredient')
+  \ } 
+
+call dish.PrepareIngredient(1) 
+echo dish.dish_name " sausage and spam
+```
+
+可以看到，旧版 `Class` 实现有很多奇怪的写法，而新版借鉴了当前流行开发语言的 `OOP` 特性（如 `Java`、`TypeScript`、`Dart`）。新版 `Class` 实现还支持静态成员变量、静态方法、接口定义、公有成员、枚举类、父类继承和接口实现等，更多用法及注意事项，详见 `:h vim9class`。
+
+
+
+### 5.14 map 和 filter
+
+这两个内置函数都是用于集合型数据的操作，`map` 用于映射或转换成其他值；`filter` 则用于筛选符合一定条件的元素。二者在函数式编程中十分常见，但在 `Vim` 脚本的写法中略显古怪，不如其他编程语言直观：
+
+```bash
+# 旧版写法
+let dishes = ['spam omelet', 'sausage', 'bacon and spam']  
+
+function HasSpam(dish) 
+  if stridx(a:dish, 'spam') > -1
+    return 1
+  endif 
+  return 0 
+endfunction 
+
+call filter(dishes, 'HasSpam(v:val)') 
+echo dishes
+" ['spam omelet', 'bacon and spam']
+
+let dishes = ['spam omelet', 'sausage', 'bacon']
+
+call map(dishes, 'HasSpam(v:val) ? v:val : v:val . '' and spam ''')
+echo dishes
+" ['spam omelet', 'sausage and spam ', 'bacon and spam ']
+```
+
+而在 `Vim9script` 中写法其实是一样的，只是抽离出的函数定义写法略有不同：
+
+```bash
+# 新版写法
+vim9script
+
+var dishes = ['spam omelet', 'sausage', 'bacon and spam']  
+
+def HasSpam(dish: string): bool
+  if stridx(dish, 'spam') > -1
+    return 1
+  endif 
+  return 0 
+enddef 
+
+filter(dishes, 'HasSpam(v:val)') 
+echo dishes 
+# ['spam omelet', 'bacon and spam']
+
+dishes = ['spam omelet', 'sausage', 'bacon']
+
+map(dishes, 'HasSpam(v:val) ? v:val : v:val .. '' and spam ''')
+echo dishes
+# ['spam omelet', 'sausage and spam ', 'bacon and spam ']
+```
+
+这里的 `v:val` 是内部遍历 `dishes` 列表时的循环变量的 **值**；此外还有 `v:key`，对应当前循环变量的 **键**。二者都是 **固定写法**。对于字典而言，它们就是每个 `entry` 项的键和值；而对于列表，则分别对应索引值和元素值。
+
+代码中的 `stridx` 函数用于查找子字符串，即判定参数 `dish` 中是否包含子字符串 `'spam'`：包含则返回对应的索引值，否则返回 `-1`。
+
+此外，`filter` 和 `map` 的第二个参数除了写成字符串形式，还可以利用刚才提到的 `Lambda` 表达式进行改造：
+
+```bash
+# 新版第 13 行的等效替换
+filter(dishes, (_, dish) => HasSpam(dish))
+# 新版第 19 行的等效替换
+map(dishes, (_, dish) => HasSpam(dish) ? dish : dish .. ' and spam')
+```
+
+如果改造一下 `HasSpam`，还可以写为更简洁的形式（使用 `funcref` 函数引用的形式）：
+
+```bash
+def HasSpam(key: number, dish: string): bool
+  return stridx(dish, 'spam') > -1
+enddef
+filter(dishes, HasSpam)
+```
+
+同理，`map` 的映射逻辑也可以封装到一个新函数中：
+
+```bash
+def AddSpamIfMissing(key: number, dish: string): string
+  return HasSpam(key, dish) ? dish : dish .. ' and spam'
+enddef
+map(dishes, AddSpamIfMissing)
+```
+
+当然也可以赋给一个变量或常量：
+
+```bash
+const AddSpamIfMissing = (key, dish) => !HasSpam(key, dish)
+  \ ? dish .. ' and spam'
+  \ : dish
+map(dishes, AddSpamIfMissing)
+```
+
+实测结果：
+
+![](assets/8.6.png)
+
+**图 8.6 实测用 funcref 函数引用改造后的 filter 和 map 执行结果（符合预期）**
+
+
+
+### 5.15 与 Vim 进行交互
+
+这一节很多内容在实测时与原书不符，这里仅列举两个简单的案例。
+
+可以使用 `execute` 解析一个字符串命令：
+
+```bash
+# 新旧版本保持一致
+var dish = 'spam omelet'
+execute 'echo dish ''probably got spam in it'''
+# 相当于执行
+echo dish 'probably got spam in it'
+```
+
+此外也可以实现在 `normal` 模式下执行某些操作，例如：
+
+```bash
+# 在 normal 模式下查询关键字并删除第一个匹配项
+execute 'normal /egg^Mdw'
+```
+
+注意，这里的 `^M` 是通过 <kbd>Ctrl</kbd><kbd>Q</kbd><kbd>Enter</kbd> 产生的，而不是手动输入 `^M` 这两个字符。
+
+执行上述语句时，`Vim` 会临时中断运行，提示输入任意键或回车键继续。按提示输入回车键，`Vim` 才会删除第一个匹配到的关键字：
+
+![](assets/8.7.png)
+
+**图 8.7 实测 execute 命令查找并删除第一个匹配项时 Vim 被中断的效果截图**
+
+这里用到了一个 `vim9cmd` 命令来手动运行脚本文件中的某一段内容（截图中即为第 1 至 9 行）。若此时再按回车键，第 8 行的第一个匹配项 `egg` 将被删除：
+
+![](assets/8.8.png)
+
+**图 8.8 输入回车键后删除第一个匹配项的效果图**
+
+最后值得一提的是特性检测函数 `has()`。例如检测当前 `Vim` 是否支持 `python3` 可以写作：
+
+```bash
+if has('python3')
+  echom 'Your Vim was compiled with Python 3 support!'
+endif
+```
+
+检测当前操作系统是否为 `Windows` 系统，使用 `has('win32')`，支持的操作系统名称有：`win64`、`macunix`、`unix`、`osxdarwin`（MacOS）等等。
+
+更多用法，详见 `:h feature-list`。
+
+
+
+### 5.16 与文件相关的命令
+
+第一个是 `expand` 命令，用于获取文件路径信息。例如获取当前文件的扩展名（当前文件名为 `12_file.vim`）：
+
+```bash
+# 旧版
+echom 'Current file extension is ' . expand('%:e') " Current file extension is vim
+# 新版
+echom 'Current file extension is ' .. expand('%:e') # Current file extension is vim
+```
+
+除了 `:e` 获取扩展名，`expand` 函数还支持以下文件信息展示：
+
+- `:p`：文件的完整路径（`full path`）；
+- `:h`：文件头部信息（`head`，即所在文件夹的名称）；
+- `:t`：文件尾部信息（`tail`，即最后的文件名）；
+- `:r`：文件根信息（`root`，即省略扩展名后的所在文件夹和文件名）；
+- `:e`：文件扩展名信息（`extension`）。
+
+实测结果（当前 `Shell` 位于 `~/vim2code/Chapter08/`，打开的文件相对路径为 `./tutorial_vim/12_file.vim`）：
+
+![](assets/8.9.png)
+
+**图 8.9 实测 expand 不同参数获取到的文件路径信息**
+
+更多用法，详见 `:h expand`。
+
+
+
+### 5.17 Prompt 提示语命令
+
+在用 `Vimscript` 做人机交互时，提示用户输入的信息通常分为两类：一是不限制输入内容的；另一种是只能输入指定内容的。前者使用 `input` 函数，后者使用 `confirm` 函数。
+
+#### 5.17.1 input 函数
+
+`input` 示例如下：
+
+```bash
+# 旧版
+let ingredient = input('Please input an ingredient: ')
+echo "\n"
+echo 'We now serve ' . ingredient . ' and spam!'
+
+# 新版
+var ingredient = input('Please input an ingredient: ')
+echo "\n"
+echo 'We now serve ' .. ingredient .. ' and spam!'
+```
+
+这里的 `\n` 用于断开 `input` 提示语与后续输出内容。
+
+运行结果：
+
+![](assets/8.10.png)
+
+**图 8.10 运行 input 函数的实测结果截图（手动输入 “sausage”）**
+
+
+
+#### 5.17.2 confirm 函数
+
+再看一个 `confirm` 的例子：
+
+```bash
+# 新旧写法都一致，以新版为例
+var answer = confirm('Add spam to a dish?', "&yes\n&no") 
+echo answer
+
+answer = confirm(
+    \ 'Add spam to a dish?', "absolutely &yes\nhell &no")
+echo answer
+```
+
+这里的 `&y` 和 `&n` 用于将 `y` 和 `n` 变为快捷应答键（与 `VB` 类似）。`\n` 用于在备选项之间生成一个分隔符（即逗号）：
+
+![](assets/8.11.png)
+
+**图 8.11 执行第一个 confirm 语句的提示情况截图**
+
+从截图还可以看到一些细节，`[y]` 表示按回车键即可默认选择 `yes` 选项，`(n)` 表示 `no` 选项的快捷键，但此时并非默认选项。按指定内容输入字符后，`confirm` 函数将从 `1` 开始返回指定选项的序号：
+
+![](assets/8.12.png)
+
+**图 8.12 先后输入 y 和 n 后的 confirm 函数返回值情况**
+
+
+
+#### 5.17.3 将提示语放入自定义快捷键
+
+如果要将提示输入的逻辑放入某个自定义快捷键组合，为了避免组合键的按键被误认为 `input` 函数的用户输入内容，需要成对使用 `inputsave()` 和 `inputrestore()` 来隔离手动输入的内容。
+
+例如，将 `input` 手动输入的内容直接 `echo` 到当前状态栏，并绑定一组快捷键自动实现该操作，具体脚本如下：
+
+```bash
+# 以新版写法为例
+def InputIngredient(): string
+  inputsave()
+  var ingredient = input('Please input an ingredient: ')
+  inputrestore()
+
+  return ingredient
+enddef
+
+nnoremap <leader>a = <scriptcmd>ingredient = InputIngredient()<cr><scriptcmd>echo ingredient<cr>
+```
+
+在示例文件 `Chapter08/tutorial_vim9/13_prompts.vim` 中运行 `:vim9 :14,22so` + <kbd>Enter</kbd> 单独执行第 14 到 22 行脚本：
+
+![](assets/8.13.png)
+
+**图 8.13 在 Vim9script 中设置自定义组合键（Leader 键 + a）**
+
+然后输入 `Leader` 键（默认为 <kbd>\\</kbd>）+ <kbd>A</kbd> 即可唤起 `InputIngredient()` 函数的运行，提示用户输入任意文本。例如输入 `bacon` 后按回车键，`Vim` 就会自动将该内容输出到状态栏：
+
+![](assets/8.14.png)
+
+![](assets/8.15.png)
+
+**图 8.14 按 Leader 键 + a 自动弹出提示语，输入 bacon 后回车，系统将自动打印该内容**
+
+> [!note]
+>
+> **DIY：关于 scriptcmd 标签的用法**
+>
+> 上述示例代码中，`<scriptcmd>` 标签是通过 `DeepSeek` 改进后的固定写法。原书代码本来为：
+>
+> ```bash
+> # TODO: Something is not working here, getting a compilation error.
+> nnoremap <leader>a = :let ingredient = InputIngredient()<cr>:echo ingredient<cr>
+> ```
+>
+> 正如注释所言，直接运行会报编译错误：`E117: Unknown function: InputIngredient`。这是因为组合键的定义仅在 `normal` 正常模式下生效（`nnoremap`）；而 `Vim` 在默认情况下是无法直接调用 `Vim9` 脚本中用户定义的函数（如 `InputIngredient`）的，`Vim9` 函数默认是局部作用域。为此，必须使用 `<scriptcmd>` 标签绕过这个问题，让 `Vim` 能够直接在键映射中调用 `Vim9` 新版脚本的局部函数和变量。详见 `:h <ScriptCmd>`。
+
+
+
+#### 5.18 利用帮助系统学习 Vim9 脚本
+
+常用的几个文档如下：
+
+- `:h eval`：深入了解旧版 `Vim` 脚本的表达式求值的各种用法（用于向后兼容）；
+- `:h vim9`：深入了解 `Vim9` 脚本的新语法特性；
+- `:h vim9class`：深入了解 `Vim9` 的 `Class` 类、对象、接口、类型、枚举等；
 
 
 
