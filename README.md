@@ -51,8 +51,8 @@ Status available：:heavy_check_mark: (Completed) | :hourglass_flowing_sand: (Wo
 |    :heavy_check_mark:    | Ch05 | [Build, Test, and Execute](./Ch05-Build-Test-and-Execute.md) |
 |    :heavy_check_mark:    | Ch06 | [Refactoring Code with Regex and Macros](./Ch06-Refactoring-Code-with-Regex-and-Macros.md) |
 |    :heavy_check_mark:    | Ch07 |     [Making Vim Your Own](./Ch07-Making-Vim-Your-Own.md)     |
-| :hourglass_flowing_sand: | Ch08 | [Transcending the Mundane with Vimscript](./Ch08-Transcending-the-Mundane-with-Vimscript.md) |
-|        :no_entry:        | Ch09 |   [Where to Go from Here](./Ch09-Where-to-Go-from-Here.md)   |
+|    :heavy_check_mark:    | Ch08 | [Transcending the Mundane with Vimscript](./Ch08-Transcending-the-Mundane-with-Vimscript.md) |
+| :hourglass_flowing_sand: | Ch09 |   [Where to Go from Here](./Ch09-Where-to-Go-from-Here.md)   |
 
 
 

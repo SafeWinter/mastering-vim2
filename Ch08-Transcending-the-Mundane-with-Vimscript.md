@@ -1105,6 +1105,553 @@ nnoremap <leader>a = <scriptcmd>ingredient = InputIngredient()<cr><scriptcmd>ech
 
 
 
+### 5.19 Vimscript 推荐编程风格
+
+主要内容包括：
+
+- 缩进使用两个空格；
+- 不用制表符（即 <kbd>Tab</kbd> 键）；
+- 操作符两边加空格；
+- 每行最多 80 个字符宽度；
+- 一行内容的换行缩进用四个空格表示；
+- 插件名称示例：`plugin-names-like-this`
+- 函数名示例：`FunctionNamesLikeThis`
+- 命令名称示例：`CommandNamesLikeThis`
+- 一组参数示例：`augroup_names_like_this`
+- 变量名示例：`variable_names_like_this`
+- 在变量前加注作用域前缀；
+- 若有疑问，参考 `Python` 的编码指导原则；
+
+更多推荐风格，请参考谷歌推荐方案：`https://google.github.io/styleguide/vimscriptguide.xml`
+
+
+
+## 6 从零打造一个 Vim 插件
+
+需求描述：通过自定义 `Vim` 插件（取名为 `vim-commenter`）快速注释（或取消注释）光标所在的 `Python` 代码。
+
+### 6.1 Vim 插件的目录结构
+
+自 `Vim 8.x` 后，`Vim` 插件就只有一种统一的目录结构：
+
+- `autoload/`：负责插件的懒加载
+- `colors/`：存放配色方案
+- `compiler/`：负责与编译器相关的功能（视具体语言而异）
+- `doc/`：存放插件文档
+- `ftdetect/`：文件类型探测方面的设置（视具体文件类型而异）
+- `ftplugin/`：与文件类型相关的插件代码（视具体文件类型而异）
+- `indent/`：与缩进相关的设置（视具体文件类型而异）
+- `plugin/`：存放插件核心功能代码
+- `syntax/`：定义各语言语法特性相关的设置（视具体语言而异）
+
+
+
+### 6.2 第一版实现
+
+为突出核心功能，这里直接通过自动加载运行自定义插件：
+
+```bash
+$ mkdir -p ~/.vim/pack/plugins/start/vim-commenter/plugin
+$ cd ~/.vim/pack/plugins/start/vim-commenter/plugin
+$ vim commenter.vim
+```
+
+插件内容如下：
+
+```bash
+# 旧版
+" Comment out the current line in Python.
+function! commenter#Comment()
+  let l:line = getline('.')
+  call setline('.', '# ' . l:line)
+endfunction
+nnoremap gc :call commenter#Comment()<cr>
+
+# 新版
+vim9script
+# Comment out the current line in Python
+export def Comment()
+  var line = getline('.')
+  setline('.', '# ' .. line)
+enddef
+nnoremap gc = <ScriptCmd>Comment()<cr>
+```
+
+> [!note]
+>
+> **注意**
+>
+> 为了更快适应 `Vim9script` 语法，后续插件代码均改为新版写法，以满足今后的性能需求（绝对原创）。
+
+接着随便打开一个文件（如第 6 章的 `Chapter06/welcome.py`），在某行输入 `gc` 会看到该行自动变为了注释语句：
+
+![](assets/8.16.png)
+
+![](assets/8.17.png)
+
+**图 8.15 完成首版插件逻辑后在任一 Python 文件上实测的注释效果**
+
+但是问题也很明显：再按 `gc` 无法自动取消注释：
+
+![](assets/8.18.png)
+
+**图 8.16 首版实现的 Bug：再次输入 gc 命令无法自动取消注释，光标位置也有问题**
+
+
+
+### 6.3 第二版实现
+
+先解决注释符号不在当前缩进位置的问题：
+
+```bash
+vim9script
+
+const comment_string = '# '
+# Comment out the current line in Python
+export def Comment()
+  var i = indent('.') # Number of spaces
+  var line = getline('.')
+  var cur_row = getcurpos()[1]
+  var cur_col = getcurpos()[2]
+  setline('.', line[ : i - 1] .. comment_string .. line[i : ])
+  cursor(cur_row, cur_col + len(comment_string))
+enddef
+nnoremap gc = <ScriptCmd>Comment()<cr>
+```
+
+运行结果（`#` 的位置修复成功）：
+
+![](assets/8.19.png)
+
+**图 8.17 修复问题：注释符号应于当前行的缩进量保持一致**
+
+
+
+### 6.4 第三版实现
+
+接着解决注释的切换问题，对插件核心逻辑做如下修改：
+
+```bash
+vim9script
+
+const comment_string = '# '
+# Comment out the current line in Python
+export def ToggleComment()
+  var i = indent('.') # Number of spaces
+  var line = getline('.')
+  var cur_row = getcurpos()[1]
+  var cur_col = getcurpos()[2]
+  var cur_offset = 0
+  if line[i : i + len(comment_string) - 1] ==# comment_string
+    setline('.', line[ : i - 1] .. line[i + len(comment_string) : ])
+  else
+    setline('.', line[ : i - 1] .. comment_string .. line[i : ])
+    cur_offset = len(comment_string)
+  endif
+  cursor(cur_row, cur_col + cur_offset)
+enddef
+nnoremap gc = <ScriptCmd>ToggleComment()<cr>
+```
+
+保存后验证效果（符合预期）：
+
+![](assets/8.20.png)
+
+![](assets/8.21.png)
+
+**图 8.18 实测注释切换功能，光标位置也能正常还原**
+
+
+
+### 6.5 第四版实现
+
+上述逻辑对于当前行存在缩进量的情况是有效的，如果没有缩进，就有问题了：
+
+![](assets/8.22.png)
+
+**图 8.19 实测新 Bug：当前行没有缩进量时，按 gc 键无法正常切换当前行注释**
+
+为此，需要再次更新，实现第四版修订：
+
+```bash
+vim9script
+
+const comment_string = '# '
+# Comment out the current line in Python
+export def ToggleComment()
+  const i = indent('.') # Number of spaces
+  const line = getline('.')
+  const cur_row = getcurpos()[1]
+  const cur_col = getcurpos()[2]
+  const prefix = i > 0 ? line[: i - 1] : '' # Handle 0 indent
+  const has_commented = line[i : i + len(comment_string) - 1] ==# comment_string
+  if has_commented
+    setline('.', prefix .. line[i + len(comment_string) : ])
+  else
+    setline('.', prefix .. comment_string .. line[i : ])
+  endif
+  const cur_offset = has_commented ? 0 : len(comment_string)
+  cursor(cur_row, cur_col + cur_offset)
+enddef
+nnoremap gc = <ScriptCmd>ToggleComment()<cr>
+```
+
+至此，核心功能点就实现完毕了。
+
+
+
+### 6.6 拆解插件逻辑
+
+接下来需要按 `Vim` 插件的标准目录结构进行合理拆分。
+
+首先，将 `comment_string` 变量改为全局作用域，然后移动到 `vim-commenter/ftplugin/python.vim`，因为只有它与特定语言（`Python`）相关，而 `ftplugin` 文件夹就是负责处理特定语言的相关配置。`python.vim` 的内容如下：
+
+```bash
+vim9script
+
+# 定义 Python 专用的注释符号（buffer-local 常量）
+const b:commenter_comment_string = '# '
+lockvar b:commenter_comment_string  # 锁定为常量
+```
+
+这里和原书的内容就不同了。根据 `DeepSeek` 给出的回复，上述代码有两点值得关注：
+
+- 使用 `b:commenter_comment_string`（`buffer-local` 变量），确保不同文件类型不会互相干扰；
+- `lockvar` 确保该变量不可被意外修改；
+- 之所以同时使用 `const` 和 `lockvar` 是出于兼容性的考虑。`lockvar` 适用于旧版 `Vimscript`，`const` 是 `Vim9` 推荐的常量声明写法；
+
+然后对 `vim-commenter/plugin/commenter.vim` 做如下改造：
+
+```bash
+vim9script
+
+# Comment out the current line in Python
+export def ToggleComment()
+  if !exists('b:commenter_comment_string')
+    echoerr 'Comment string not defined for filetype: ' .. &filetype
+    return
+  endif
+
+  const comment_string = b:commenter_comment_string
+  const i = indent('.')                     # Number of indent spaces
+  const line = getline('.')                 # Content of current line
+  const cur_row = getcurpos()[1]            # Current row number
+  const cur_col = getcurpos()[2]            # Current column number
+  const prefix = i > 0 ? line[: i - 1] : '' # Handle 0 indent
+  const comment_len = len(comment_string)
+  const has_commented = line[i : i + len(comment_string) - 1] ==# comment_string
+  if has_commented
+    # Cancel comment
+    setline('.', prefix .. line[i + comment_len : ])
+  else
+    # Make comment line
+    setline('.', prefix .. comment_string .. line[i : ])
+  endif
+  const cur_offset = has_commented ? 0 : comment_len
+  cursor(cur_row, cur_col + cur_offset)
+enddef
+
+nnoremap gc = <ScriptCmd>ToggleComment()<cr>
+```
+
+其中，第 5 至 8 行是 `DeepSeek` 补上的，用到了防御式编程；同时还补全了核心逻辑的注释与排版，抽离了公共变量 `comment_len`，使得代码整体更易于维护。
+
+保存最新改动后，使用 `so %` 重新生效。此时重新打开一个测试文件，反复执行 `gc` 命令，该行内容会正常切换注释（如果不重新打开测试文件，`Vim` 可能会报错，提示找不到 `python` 文件类型：`Comment string not defined for filetype: python`）。
+
+为了进一步验证配置的有效性，再对 `.c` 结尾的 `C` 语言源文件指定新的注释符号 `// `，新建文件类型配置 `ftplugin/c.vim`：
+
+```bash
+vim9script
+
+const b:commenter_comment_string = '// '
+lockvar b:commenter_comment_string
+```
+
+然后任意生成一个 `C` 语言源码文件 `demo.c`：
+
+```c
+#include <stdio.h>
+
+// 这是一个单行注释
+int main() {
+    // 打印 Hello, World!
+    printf("Hello, World!\n");
+
+    /* 这是一个多行注释
+       第二行注释 */
+    int x = 10;
+    if (x > 5) {
+        printf("x is greater than 5\n");
+    }
+
+    /*
+     * 另一个多行注释
+     * 用于测试
+     */
+    return 0;
+}
+```
+
+打开该文件，多次执行 `gc` 命令，会看到光标所在行成功实现注释行的切换：
+
+![](assets/8.23.png)
+
+![](assets/8.24.png)
+
+**图 8.20 实测 vim-commenter 插件对 C 语言文件成功实现注释行的切换**
+
+
+
+### 6.7 拆分到 autoload 目录
+
+为了进一步提高插件性能，还可以将核心逻辑迁移到 `autoload` 文件夹下。先创建文件夹：
+
+```bash
+$ mkdir autoload
+$ vim autoload/commenter.vim
+```
+
+`autoload/commenter.vim` 的文件内容如下：
+
+```bash
+vim9script
+
+# Comment out the current line in Python
+export def ToggleComment()
+  if !exists('b:commenter_comment_string')
+    echoerr 'Comment string not defined for filetype: ' .. &filetype
+    return
+  endif
+
+  const comment_string = b:commenter_comment_string
+  const i = indent('.')                     # Number of indent spaces
+  const line = getline('.')                 # Content of current line
+  const cur_row = getcurpos()[1]            # Current row number
+  const cur_col = getcurpos()[2]            # Current column number
+  const prefix = i > 0 ? line[: i - 1] : '' # Handle 0 indent
+  const comment_len = len(comment_string)
+  const has_commented = line[i : i + len(comment_string) - 1] ==# comment_string
+  if has_commented
+    # Cancel comment
+    setline('.', prefix .. line[i + comment_len : ])
+  else
+    # Make comment line
+    setline('.', prefix .. comment_string .. line[i : ])
+  endif
+  const cur_offset = has_commented ? -comment_len : comment_len
+  cursor(cur_row, cur_col + cur_offset)
+enddef
+```
+
+然后将原来的 `plugin/commenter.vim` 中的同名函数删除，并作如下修改：
+
+```bash
+vim9script
+
+nnoremap gc <ScriptCmd>commenter#ToggleComment()<cr>
+```
+
+注意，第 3 行在调用 `ToggleComment` 函数时加了一个 `commenter#` 前缀。这是 `autoload` 的特有命名规则：该目录下的文件名 `commenter.vim` 对应命名空间 `commenter#`。如果缺失命名空间，`gc` 命令将无法关联到 `ToggleComment` 函数，并报错：`E117: Unknown function: ToggleComment`。
+
+完成上述变更后，重新打开一个 `Python` 示例文件，插件预定功能均正常运行。
+
+此时插件各部分的加载顺序如下：
+
+1. 打开 `Vim`，`<...>/vim-commenter/plugin/commenter.vim` 中的内容将被自动加载，自定义组合键 `gc` 生效；
+2. 打开任意一个 `Python` 文件，将激活 `<...>/vim-commenter/ftplugin/python.vim` 中的内容；此时注释标记初始化成功（即 `# `）；
+3. 按 `gc` 键将激活 `<...>/vim-commenter/autoload/commenter.vim` 中的内容，并执行 `commenter#ToggleComment()` 中的插件核心逻辑。
+
+
+
+### 6.8 新增插件文档
+
+插件文档统一放到 `/doc` 文件夹下，新增 `/doc/commenter.txt`：
+
+```bash
+*commenter.txt* Our first commenting plugin.
+*commenter*
+=====================================================================
+CONTENTS *commenter-contents*
+
+1. Intro........................................|commenter-intro|
+2. Usage........................................|commenter-usage|
+
+=====================================================================
+1. Intro *commenter-intro*
+
+Have you ever wanted to comment out a line with only three presses of a button? Now you can! The new and wonderful vim-commenter lets you comment out a single line in Python quickly!
+
+2. Usage *commenter-usage*
+
+This wonderful plugin supports the following key bindings:
+
+gc: toggle comment on a current line
+
+That's it for now. Thanks for reading!
+
+vim:tw=78:ts=2:sts=2:sw=2:ft=help:norl:
+```
+
+上述内容中——
+
+- 形如 `*help-tag*` 的内容表示一个帮助标签，可跟在 `:help` 命令后快速跳转到文档内容中；
+- 形如 `|commenter-intro|` 的内容表示文档内部目录，用于快速导航到正文中的对应位置；
+- 形如 `====` 的内容仅为装饰效果，无实际意义；
+- 最后一行 `vim:tw=78:ts=2:sts=2:sw=2:ft=help:norl:` 用于控制文档页的版面样式（所有选项都可用 `set` 关键字设置）。
+
+这样，运行 `:h commenter-intro` 即可进入该插件帮助文档页。更多帮助文档的写法，详见 `:h help-writing`。
+
+手动加载帮助文档，需运行命令 `:help-tags ~/.vim/pack/plugins/start/vim-commenter/doc`，即后跟一个 `/doc` 文件夹的完整路径。
+
+实测效果：
+
+![](assets/8.25.png)
+
+**图 8.21 为 vim-commenter 插件配置帮助文档后的实测查询效果**
+
+
+
+### 6.9 功能增强：支持多行操作
+
+仅仅使用 `gc` 命令只能对单行内容进行注释或取消注释，实际应用中最好加入多行支持，例如按 `5gc` 可以将包括当前行在内的下面五行代码批量注释（或批量取消注释）。
+
+本节内容升级为 `Vim9script` 语法后与原书出入较大，若需按旧版写法实现增强，请参考原书内容，这里仅梳理新版重构方案。
+
+先改造 `plugin/commenter.vim`：
+
+```bash
+vim9script
+
+nnoremap gc <ScriptCmd>commenter#ToggleComment(v:count1)<cr>
+```
+
+这里的 `v:count1` 表示键入的数量，且默认为 1。
+
+在改造 `autoload/commenter.vim`：
+
+```bash
+vim9script
+
+# Returns true if b:commenter_comment_string exists.
+def HasCommentStr(): bool
+  if exists('b:commenter_comment_string')
+    return true
+  endif
+  echoerr 'Comment string not defined for filetype: ' .. &filetype
+  return false
+enddef
+
+# Detect smallest indentation for a range of lines.
+def DetectMinIndent(start: number, end: number): number
+  var min_indent = -1
+  var i = start
+  while i <= end
+    if min_indent == -1 || indent(i) < min_indent
+      min_indent = indent(i)
+    endif
+    i += 1
+  endwhile
+  return min_indent
+enddef
+
+def InsertOrRemoveComment(lnum: number, line: string, indent: number, has_commented: bool)
+  # Handle 0 indent cases
+  const prefix = indent > 0 ? line[ : indent - 1] : ''
+  const comment_str = b:commenter_comment_string
+  if has_commented
+    # Remove comment sign
+    setline(lnum, prefix .. line[indent + len(comment_str) : ])
+  else
+    # Add comment sign
+    setline(lnum, prefix .. comment_str .. line[indent : ])
+  endif
+enddef
+
+# Comment out the current line in Python
+export def ToggleComment(count: number)
+  if !HasCommentStr()
+    return
+  endif
+
+  const start = line('.')
+  # Stop at the end of file.
+  var end = start + count - 1
+  if end > line('$')
+    end = line('$')
+  endif
+
+  const indent = DetectMinIndent(start, end)
+  const lines = start == end ? [getline(start)] : getline(start, end)
+
+  const cur_row = getcurpos()[1]            # Current row number
+  const cur_col = getcurpos()[2]            # Current column number
+
+  const comment_string = b:commenter_comment_string
+  const comment_len = len(comment_string)
+  const has_commented = lines[0][indent : indent + comment_len - 1] ==# comment_string
+
+  var lnum = start
+  for line in lines
+    InsertOrRemoveComment(lnum, line, indent, has_commented)
+    lnum += 1
+  endfor
+  const cur_offset = has_commented ? -comment_len : comment_len
+  cursor(cur_row, cur_col + cur_offset)
+enddef
+```
+
+运行 `:w | so %` 生效新内容后，任意打开一个测试文件，如 `Chapter06/welcome.py`：
+
+![](assets/8.26.png)
+
+**图 8.22 多行注释功能重构完毕后打开任意一个 Python 测试文件**
+
+然后按 `5gc`：
+
+![](assets/8.27.png)
+
+**图 8.23 光标定位到任意位置，按 5gc 测试批量注释功能**
+
+再按一次 `5gc`，测试批量取消注释，实测结果如下（符合预期）：
+
+![](assets/8.28.png)
+
+**图 8.24 在原位置再按一次 5gc，测试批量取消注释功能（符合预期）**
+
+
+
+### 6.10 插件的对外发布
+
+实测过程中，每一次插件更新我都在本地用 `Git` 进行了变更管理，因此剩下的步骤就是到 `GitHub` 新建仓库并关联到本地即可：
+
+```bash
+# 在 GitHub 新建一个 Vim 插件仓库 vim-commenter
+# 复制出远程 URL 备用：git@github.com:SafeWinter/vim-commenter.git
+$ cd ~/.vim/pack/plugins/start/vim-commenter
+$ git init
+$ git add .
+$ git commit -m "First version of the plugin is ready!"
+$ git remote add origin git@github.com:SafeWinter/vim-commenter.git
+# 重命名本地分支，和 GitHub 上的 main 分支保持一致
+$ git branch -m master main
+# 为方便后续 git pull 操作，最好手动关联一下上游分支
+$ git branch --set-upstream-to=origin/main main
+# 将本地提交记录推送到远程 GitHub 仓库
+$ git push origin main
+```
+
+此外，还可以给该仓库添加 `README` 文档页和 `LICENSE` 许可，使其他人可以更方便地使用：
+
+![](assets/8.29.png)
+
+**图 8.25 最终发布到 GitHub 社区的自定义 Vim 插件项目截图**
+
+
+
+
+
+
+
 ---
 
 [^1]: `Vimscript` 是 `Vim8.x` 及以前版本的专属 `Vim` 脚本语言；`Vim9script` 由 `Vim` 之父 **Bram Moolenaar** 于 2022 年 6 月正式发布。自 2023 年 8 月 **Bram Moolenaar** 猝然离世（享年 62 岁）后，开源社区的 `Vim` 核心成员与爱好者们又纷纷组织起来，于 2024 年 1 月推出了改良版的 `Vim 9.1` 版，并对此前的 `Vim9script` 存在的诸多问题进行了全面修复，以此纪念这位 `Vim` 编辑器的缔造者、维护者以及终身领导者。
