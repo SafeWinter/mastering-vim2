@@ -42,17 +42,17 @@
 
 Status available：:heavy_check_mark: (Completed) | :hourglass_flowing_sand: (Working) | :no_entry: (Not Started) | :orange_book: (Finish reading)
 
-|          Status          | No.  |                        Chapter Title                         |
-| :----------------------: | :--: | :----------------------------------------------------------: |
-|    :heavy_check_mark:    | Ch01 |         [Getting Started](./Ch01-Getting-Started.md)         |
-|    :heavy_check_mark:    | Ch02 | [Advanced Editing and Navigation](./Ch02-Advanced-Editing-and-Navigation.md) |
-|    :heavy_check_mark:    | Ch03 | [Follow the Leader Plugin Management](./Ch03-Follow-the-Leader-Plugin-Management.md) |
-|    :heavy_check_mark:    | Ch04 | [Understanding Structured Text](./Ch04-Understanding-Structured-Text.md) |
-|    :heavy_check_mark:    | Ch05 | [Build, Test, and Execute](./Ch05-Build-Test-and-Execute.md) |
-|    :heavy_check_mark:    | Ch06 | [Refactoring Code with Regex and Macros](./Ch06-Refactoring-Code-with-Regex-and-Macros.md) |
-|    :heavy_check_mark:    | Ch07 |     [Making Vim Your Own](./Ch07-Making-Vim-Your-Own.md)     |
-|    :heavy_check_mark:    | Ch08 | [Transcending the Mundane with Vimscript](./Ch08-Transcending-the-Mundane-with-Vimscript.md) |
-| :hourglass_flowing_sand: | Ch09 |   [Where to Go from Here](./Ch09-Where-to-Go-from-Here.md)   |
+|       Status       | No.  |                        Chapter Title                         |
+| :----------------: | :--: | :----------------------------------------------------------: |
+| :heavy_check_mark: | Ch01 |         [Getting Started](./Ch01-Getting-Started.md)         |
+| :heavy_check_mark: | Ch02 | [Advanced Editing and Navigation](./Ch02-Advanced-Editing-and-Navigation.md) |
+| :heavy_check_mark: | Ch03 | [Follow the Leader Plugin Management](./Ch03-Follow-the-Leader-Plugin-Management.md) |
+| :heavy_check_mark: | Ch04 | [Understanding Structured Text](./Ch04-Understanding-Structured-Text.md) |
+| :heavy_check_mark: | Ch05 | [Build, Test, and Execute](./Ch05-Build-Test-and-Execute.md) |
+| :heavy_check_mark: | Ch06 | [Refactoring Code with Regex and Macros](./Ch06-Refactoring-Code-with-Regex-and-Macros.md) |
+| :heavy_check_mark: | Ch07 |     [Making Vim Your Own](./Ch07-Making-Vim-Your-Own.md)     |
+| :heavy_check_mark: | Ch08 | [Transcending the Mundane with Vimscript](./Ch08-Transcending-the-Mundane-with-Vimscript.md) |
+| :heavy_check_mark: | Ch09 |   [Where to Go from Here](./Ch09-Where-to-Go-from-Here.md)   |
 
 
 
